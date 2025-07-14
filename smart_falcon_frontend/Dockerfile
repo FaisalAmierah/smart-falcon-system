@@ -1,38 +1,69 @@
+
 # المرحلة الأولى: بناء التطبيق
 FROM node:18-alpine AS build
+
+# تحديد مجلد العمل
 WORKDIR /app
 
 # انسخ كل ملفات المشروع أولاً
 COPY . .
 
-# --- التصحيح الأول: إعادة تسمية الملف ليتوافق مع الإعدادات ---
+# إعادة تسمية الملف ليتوافق مع الإعدادات
 RUN mv src/App.jsx src/main.jsx
 
-# --- التصحيح النهائي: إنشاء ملف إعدادات Vite بطريقة أكثر توافقية ---
-RUN echo "import { defineConfig } from 'vite';" > vite.config.js && \
-    echo "import react from '@vitejs/plugin-react';" >> vite.config.js && \
-    echo "import path from 'path';" >> vite.config.js && \
-    echo "" >> vite.config.js && \
-    echo "export default defineConfig({" >> vite.config.js && \
-    echo "  plugins: [react()]," >> vite.config.js && \
-    echo "  resolve: {" >> vite.config.js && \
-    echo "    alias: {" >> vite.config.js && \
-    echo "      '@': path.resolve(__dirname, './src')," >> vite.config.js && \
-    echo "    }," >> vite.config.js && \
-    echo "  }," >> vite.config.js && \
-    echo "});" >> vite.config.js
+# إنشاء مجلد lib إذا لم يكن موجوداً
+RUN mkdir -p src/lib
 
-# قم بتثبيت pnpm
+# إنشاء ملف utils المطلوب لـ shadcn/ui
+RUN echo "import { clsx } from 'clsx';" > src/lib/utils.js
+RUN echo "import { twMerge } from 'tailwind-merge';" >> src/lib/utils.js
+RUN echo "" >> src/lib/utils.js
+RUN echo "export function cn(...inputs) {" >> src/lib/utils.js
+RUN echo "  return twMerge(clsx(inputs));" >> src/lib/utils.js
+RUN echo "}" >> src/lib/utils.js
+
+# إنشاء ملف إعدادات Vite بطريقة آمنة
+RUN echo "import { defineConfig } from 'vite';" > vite.config.js
+RUN echo "import react from '@vitejs/plugin-react';" >> vite.config.js
+RUN echo "import path from 'path';" >> vite.config.js
+RUN echo "" >> vite.config.js
+RUN echo "export default defineConfig({" >> vite.config.js
+RUN echo "  plugins: [react()]," >> vite.config.js
+RUN echo "  resolve: {" >> vite.config.js
+RUN echo "    alias: {" >> vite.config.js
+RUN echo "      '@': path.resolve(__dirname, './src')," >> vite.config.js
+RUN echo "    }," >> vite.config.js
+RUN echo "  }," >> vite.config.js
+RUN echo "});" >> vite.config.js
+
+# تثبيت pnpm عالمياً
 RUN npm install -g pnpm
 
-# قم بتثبيت الاعتماديات
+# تثبيت الاعتماديات باستخدام pnpm
 RUN pnpm install
 
-# قم ببناء التطبيق
+# بناء التطبيق للإنتاج
 RUN pnpm run build
 
-# المرحلة الثانية: تقديم الملفات المبنية باستخدام خادم ويب خفيف
+# المرحلة الثانية: تقديم الملفات المبنية باستخدام nginx
 FROM nginx:stable-alpine
+
+# نسخ الملفات المبنية من المرحلة الأولى إلى nginx
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# إنشاء ملف إعدادات nginx أساسي
+RUN echo "server {" > /etc/nginx/conf.d/default.conf
+RUN echo "    listen 80;" >> /etc/nginx/conf.d/default.conf
+RUN echo "    server_name localhost;" >> /etc/nginx/conf.d/default.conf
+RUN echo "    location / {" >> /etc/nginx/conf.d/default.conf
+RUN echo "        root /usr/share/nginx/html;" >> /etc/nginx/conf.d/default.conf
+RUN echo "        index index.html index.htm;" >> /etc/nginx/conf.d/default.conf
+RUN echo "        try_files \$uri \$uri/ /index.html;" >> /etc/nginx/conf.d/default.conf
+RUN echo "    }" >> /etc/nginx/conf.d/default.conf
+RUN echo "}" >> /etc/nginx/conf.d/default.conf
+
+# فتح المنفذ 80
 EXPOSE 80
+
+# تشغيل nginx
 CMD ["nginx", "-g", "daemon off;"]
