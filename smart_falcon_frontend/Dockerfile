@@ -8,8 +8,22 @@ COPY . .
 # --- خطوة تشخيصية: عرض محتويات المجلد ---
 RUN ls -R
 
-# --- التصحيح النهائي: إعادة تسمية الملف ليتوافق مع الإعدادات ---
+# --- التصحيح الأول: إعادة تسمية الملف ليتوافق مع الإعدادات ---
 RUN mv src/App.jsx src/main.jsx
+
+# --- التصحيح الثاني: إنشاء ملف إعدادات Vite لتعريف مسار @ ---
+RUN echo "import { defineConfig } from 'vite';\n\
+import react from '@vitejs/plugin-react';\n\
+import path from 'path';\n\
+\n\
+export default defineConfig({\n\
+  plugins: [react()],\n\
+  resolve: {\n\
+    alias: {\n\
+      '@': path.resolve(__dirname, './src'),\n\
+    },\n\
+  },\n\
+});" > vite.config.js
 
 # قم بتثبيت pnpm
 RUN npm install -g pnpm
