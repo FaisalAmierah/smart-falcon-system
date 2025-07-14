@@ -12,18 +12,20 @@ RUN ls -R
 RUN mv src/App.jsx src/main.jsx
 
 # --- التصحيح الثاني: إنشاء ملف إعدادات Vite لتعريف مسار @ ---
-RUN echo "import { defineConfig } from 'vite';\n\
-import react from '@vitejs/plugin-react';\n\
-import path from 'path';\n\
-\n\
-export default defineConfig({\n\
-  plugins: [react()],\n\
-  resolve: {\n\
-    alias: {\n\
-      '@': path.resolve(__dirname, './src'),\n\
-    },\n\
-  },\n\
-});" > vite.config.js
+RUN cat > vite.config.js << 'EOF'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+EOF
 
 # قم بتثبيت pnpm
 RUN npm install -g pnpm
