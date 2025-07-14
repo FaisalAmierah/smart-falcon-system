@@ -1,8 +1,15 @@
+
 # استخدم صورة بايثون رسمية كنقطة بداية
 FROM python:3.10-slim
 
 # عيّن دليل العمل داخل الحاوية ليكون /app
 WORKDIR /app
+
+# تثبيت الاعتماديات النظامية المطلوبة (إضافة صغيرة)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # انسخ ملف المتطلبات أولاً للاستفادة من التخزين المؤقت لـ Docker
 # هذا السطر يفترض أن ملف requirements.txt موجود في جذر مجلد smart_falcon_backend
