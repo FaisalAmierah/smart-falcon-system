@@ -11,21 +11,19 @@ RUN ls -R
 # --- التصحيح الأول: إعادة تسمية الملف ليتوافق مع الإعدادات ---
 RUN mv src/App.jsx src/main.jsx
 
-# --- التصحيح الثاني: إنشاء ملف إعدادات Vite لتعريف مسار @ ---
-RUN cat > vite.config.js << 'EOF'
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-});
-EOF
+# --- التصحيح النهائي: إنشاء ملف إعدادات Vite بطريقة أكثر توافقية ---
+RUN echo "import { defineConfig } from 'vite';" > vite.config.js && \
+    echo "import react from '@vitejs/plugin-react';" >> vite.config.js && \
+    echo "import path from 'path';" >> vite.config.js && \
+    echo "" >> vite.config.js && \
+    echo "export default defineConfig({" >> vite.config.js && \
+    echo "  plugins: [react()]," >> vite.config.js && \
+    echo "  resolve: {" >> vite.config.js && \
+    echo "    alias: {" >> vite.config.js && \
+    echo "      '@': path.resolve(__dirname, './src')," >> vite.config.js && \
+    echo "    }," >> vite.config.js && \
+    echo "  }," >> vite.config.js && \
+    echo "});" >> vite.config.js
 
 # قم بتثبيت pnpm
 RUN npm install -g pnpm
