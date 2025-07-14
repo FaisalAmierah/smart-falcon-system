@@ -13,7 +13,20 @@ RUN mv src/App.jsx src/main.jsx
 
 # --- التصحيح النهائي: إنشاء ملف إعدادات Vite بالطريقة الصحيحة ---
 RUN cat > vite.config.js << 'EOF'
+RUN cat > vite.config.js << 'EOF'
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+EOF
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
